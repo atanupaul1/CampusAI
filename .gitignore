@@ -1,0 +1,49 @@
+# ========================
+# Python / Backend
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+env/
+.env
+.env.local
+.env.*.local
+
+# ========================
+# Flutter / Dart
+# ========================
+*.dart_tool/
+.packages
+.pub/
+build/
+frontend/.dart_tool/
+frontend/.packages
+frontend/build/
+
+# ========================
+# IDE
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ========================
+# Misc
+# ========================
+*.log
+*.pid
+*.seed
+node_modules/
+.n8n/

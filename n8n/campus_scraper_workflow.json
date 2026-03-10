@@ -1,0 +1,253 @@
+{
+  "name": "IUT Campus Scraper (Telegram Bot)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"]
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "iut-campus-scraper",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-cred",
+          "name": "IUT Campus Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-text",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/fetch",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "check-user",
+              "leftValue": "={{ $json.message.from.id }}",
+              "rightValue": 1685715420,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-command",
+      "name": "Is /fetch from Admin?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "🔄 Fetching latest events from IUT website...\nPlease wait a moment.",
+        "additionalFields": {}
+      },
+      "id": "reply-fetching",
+      "name": "Reply: Fetching...",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [690, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-cred",
+          "name": "IUT Campus Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "⛔ Unauthorized. Only the admin can trigger this command.",
+        "additionalFields": {}
+      },
+      "id": "reply-unauthorized",
+      "name": "Reply: Unauthorized",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [690, 420],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-cred",
+          "name": "IUT Campus Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://iutripura.edu.in/eventspage",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "http-fetch-events",
+      "name": "Fetch Events Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [910, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// IUT Events Parser — extracts events from iutripura.edu.in\n// HTML structure: <li class=\"item\"> containing\n//   <h4 class=\"sub-title\">  → title\n//   <p class=\"text\">        → description\n//   <em>Event Date: ...</em> → date\n//   <a href=\"/Home/EventsDetails/ID\"> → detail link\n// ============================================================\n\nconst html = $input.first().json.data || '';\nconst events = [];\nconst seen = new Set();\n\n// Helper: strip HTML tags\nconst strip = (s) => s\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&amp;/g, '&')\n  .replace(/&nbsp;/g, ' ')\n  .replace(/&quot;/g, '\"')\n  .replace(/&#\\d+;/g, '')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\n// Determine forthcoming vs concluded boundary\nconst forthIdx = html.toLowerCase().indexOf('forthcoming');\nconst conclIdx = html.toLowerCase().indexOf('concluded');\n\n// Find all event <li class=\"item\"> blocks\nconst itemRegex = /<li\\s+class=\"item\"[^>]*>([\\s\\S]*?)<\\/li>/gi;\nlet itemMatch;\n\nwhile ((itemMatch = itemRegex.exec(html)) !== null && events.length < 50) {\n  const block = itemMatch[1];\n  const blockPos = itemMatch.index;\n\n  // Extract detail link and event ID\n  const linkMatch = block.match(/href\\s*=\\s*[\"']([^\"']*EventsDetails\\/(\\d+))[\"']/i);\n  if (!linkMatch) continue;\n  const eventId = linkMatch[2];\n  if (seen.has(eventId)) continue;\n  seen.add(eventId);\n\n  const sourceUrl = linkMatch[1].startsWith('http')\n    ? linkMatch[1]\n    : 'https://iutripura.edu.in' + linkMatch[1];\n\n  // Extract title from <h4 class=\"sub-title\">\n  const titleMatch = block.match(/<h4[^>]*class=\"[^\"]*sub-title[^\"]*\"[^>]*>([\\s\\S]*?)<\\/h4>/i)\n    || block.match(/<h[2-6][^>]*>([\\s\\S]*?)<\\/h[2-6]>/i);\n  const title = titleMatch ? strip(titleMatch[1]) : 'Untitled Event';\n\n  // Extract description from <p class=\"text\">\n  const descMatch = block.match(/<p[^>]*class=\"[^\"]*text[^\"]*\"[^>]*>([\\s\\S]*?)<\\/p>/i)\n    || block.match(/<p[^>]*>([\\s\\S]*?)<\\/p>/i);\n  const description = descMatch ? strip(descMatch[1]) : title;\n\n  // Extract date from <em>Event Date: ...</em>\n  const dateMatch = block.match(/Event\\s*Date\\s*:?\\s*([A-Za-z]{3,9}\\s+\\d{1,2}\\s*,?\\s*\\d{4})/i);\n  let startTime = null;\n  if (dateMatch) {\n    try { startTime = new Date(dateMatch[1].trim()).toISOString(); } catch (e) {}\n  }\n\n  // Determine category: forthcoming or concluded\n  const isForthcoming = forthIdx >= 0 && (conclIdx < 0 || blockPos < conclIdx);\n  const category = isForthcoming ? 'Forthcoming' : 'Concluded';\n\n  // Extract image URL if available\n  const imgMatch = block.match(/<img[^>]*src\\s*=\\s*[\"']([^\"']+)[\"']/i);\n  const imageUrl = imgMatch\n    ? (imgMatch[1].startsWith('http') ? imgMatch[1] : 'https://iutripura.edu.in' + imgMatch[1])\n    : null;\n\n  events.push({\n    json: {\n      title: title.substring(0, 300),\n      description: description.substring(0, 1000),\n      location: 'ICFAI University, Tripura',\n      start_time: startTime,\n      category: category,\n      source_url: sourceUrl\n    }\n  });\n}\n\nreturn events;"
+      },
+      "id": "parse-html",
+      "name": "Parse IUT Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-data",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "check-data",
+      "name": "Has Events?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1350, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-project.supabase.co/rest/v1/campus_events",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey", "value": "your-supabase-anon-key" },
+            { "name": "Authorization", "value": "Bearer your-supabase-service-role-key" },
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=merge-duplicates" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "body",
+              "value": "={{ JSON.stringify($input.all().map(i => i.json)) }}"
+            }
+          ]
+        }
+      },
+      "id": "upsert-supabase",
+      "name": "Upsert to Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1570, 100]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ '✅ Done! Fetched ' + $('Parse IUT Events').all().length + ' events from IUT website and updated Supabase.\\n\\n📋 Latest events:\\n' + $('Parse IUT Events').all().slice(0, 5).map((e, i) => '  ' + (i+1) + '. ' + e.json.title + (e.json.start_time ? ' (' + new Date(e.json.start_time).toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'}) + ')' : '')).join('\\n') }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "reply-success",
+      "name": "Reply: Success",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1790, 100],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-cred",
+          "name": "IUT Campus Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "❌ No events could be extracted from the IUT website.\n\nThe page structure may have changed. Please check https://iutripura.edu.in/eventspage manually.",
+        "additionalFields": {}
+      },
+      "id": "reply-no-data",
+      "name": "Reply: No Events",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1570, 320],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-cred",
+          "name": "IUT Campus Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [[{ "node": "Is /fetch from Admin?", "type": "main", "index": 0 }]]
+    },
+    "Is /fetch from Admin?": {
+      "main": [
+        [{ "node": "Reply: Fetching...", "type": "main", "index": 0 }],
+        [{ "node": "Reply: Unauthorized", "type": "main", "index": 0 }]
+      ]
+    },
+    "Reply: Fetching...": {
+      "main": [[{ "node": "Fetch Events Page", "type": "main", "index": 0 }]]
+    },
+    "Fetch Events Page": {
+      "main": [[{ "node": "Parse IUT Events", "type": "main", "index": 0 }]]
+    },
+    "Parse IUT Events": {
+      "main": [[{ "node": "Has Events?", "type": "main", "index": 0 }]]
+    },
+    "Has Events?": {
+      "main": [
+        [{ "node": "Upsert to Supabase", "type": "main", "index": 0 }],
+        [{ "node": "Reply: No Events", "type": "main", "index": 0 }]
+      ]
+    },
+    "Upsert to Supabase": {
+      "main": [[{ "node": "Reply: Success", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
