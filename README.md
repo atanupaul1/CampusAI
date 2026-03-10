@@ -2,14 +2,13 @@
 
 # 🎓 Campus AI Assistant
 
-**A smart campus companion app powered by AI — built with Flutter, FastAPI, Supabase, and n8n.**
+**A smart campus companion app powered by AI — built with Flutter, FastAPI, and Supabase.**
 
 Ask about events, schedules, campus info, and more — all through an intelligent chat interface.
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi)
 ![Supabase](https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3ECF8E?logo=supabase)
-![n8n](https://img.shields.io/badge/n8n-Automation-EA4B71?logo=n8n)
 
 </div>
 
@@ -26,10 +25,8 @@ Ask about events, schedules, campus info, and more — all through an intelligen
   - [1. Supabase Setup](#1-supabase-setup)
   - [2. Backend Setup](#2-backend-setup)
   - [3. Frontend Setup](#3-frontend-setup)
-  - [4. n8n Workflow Setup (Optional)](#4-n8n-workflow-setup-optional)
 - [Running the App](#-running-the-app)
 - [Deployment](#-deployment)
-- [Screenshots](#-screenshots)
 - [Contributing](#-contributing)
 - [License](#-license)
 
@@ -45,7 +42,6 @@ Ask about events, schedules, campus info, and more — all through an intelligen
 | 📅 **Campus Events** | Browse upcoming and past campus events with filtering |
 | 🔐 **Authentication** | Secure user login/signup via Supabase Auth |
 | 💬 **Chat History** | Persistent chat sessions saved to Supabase |
-| 🌐 **Web Scraper** | Telegram bot-triggered n8n workflow scrapes real university events |
 | 🌗 **Dark/Light Mode** | Material 3 dynamic theming with system preference support |
 
 ---
@@ -57,18 +53,13 @@ Ask about events, schedules, campus info, and more — all through an intelligen
 │   Flutter App   │ ───→ │  FastAPI Backend  │ ───→ │   Supabase    │
 │   (Frontend)    │      │   (Python API)    │      │  (DB + Auth)  │
 └─────────────────┘      └──────────────────┘      └───────────────┘
-                                │                         ↑
-                                │ LLM API                 │
-                                ▼                         │
-                         ┌──────────────┐          ┌──────────────┐
-                         │ Gemini/Groq  │          │  n8n Workflow │
-                         │   (AI/LLM)   │          │  (Scraper)   │
-                         └──────────────┘          └──────────────┘
-                                                         ↑
-                                                   ┌──────────────┐
-                                                   │ Telegram Bot │
-                                                   │  (/fetch)    │
-                                                   └──────────────┘
+                                │
+                                │ LLM API
+                                ▼
+                         ┌──────────────┐
+                         │ Gemini/Groq  │
+                         │   (AI/LLM)   │
+                         └──────────────┘
 ```
 
 ---
@@ -94,10 +85,6 @@ Ask about events, schedules, campus info, and more — all through an intelligen
 ### Database & Auth
 - **Supabase (PostgreSQL)** — Hosted database with Row Level Security
 - **Supabase Auth** — Email/password authentication
-
-### Automation
-- **n8n** — Workflow automation for web scraping
-- **Telegram Bot API** — On-demand trigger for scraping
 
 ---
 
@@ -142,10 +129,6 @@ CampusAI/
 │   ├── .env.example            # Frontend env template
 │   └── pubspec.yaml            # Flutter dependencies
 │
-├── n8n/                        # n8n automation workflow
-│   ├── campus_scraper_workflow.json  # Telegram-triggered scraper
-│   └── README.md               # n8n setup guide
-│
 ├── supabase_migration.sql      # Database schema (tables, RLS, indexes)
 ├── seed_data.sql               # Sample events & FAQs
 ├── DEPLOYMENT.md               # Production deployment guide
@@ -165,13 +148,6 @@ Before you begin, make sure you have the following installed:
 | **Git** | Latest | [git-scm.com](https://git-scm.com/) |
 | **Supabase Account** | Free tier | [supabase.com](https://supabase.com/) |
 | **Gemini API Key** | Free tier | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
-
-**Optional:**
-| Tool | Purpose | Download |
-|------|---------|----------|
-| **n8n** | Event scraping automation | [n8n.io](https://n8n.io/) |
-| **Docker** | Running n8n locally | [docker.com](https://www.docker.com/) |
-| **Telegram** | Bot trigger for n8n | [telegram.org](https://telegram.org/) |
 
 ---
 
@@ -203,7 +179,7 @@ Before you begin, make sure you have the following installed:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/CampusAI.git
+git clone https://github.com/atanupaul1/CampusAI.git
 cd CampusAI/backend
 
 # Create a virtual environment
@@ -280,33 +256,9 @@ flutter build apk --dart-define-from-file=.env
 
 ---
 
-### 4. n8n Workflow Setup (Optional)
-
-The n8n workflow scrapes real events from your university website and populates the `campus_events` table in Supabase — triggered on-demand via a Telegram bot.
-
-1. **Create a Telegram bot** via [@BotFather](https://t.me/BotFather) and copy the bot token.
-
-2. **Start n8n**:
-   ```bash
-   # Docker (recommended)
-   docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
-   ```
-
-3. Open [http://localhost:5678](http://localhost:5678), go to **Credentials → Add → Telegram API**, name it `IUT Campus Bot`, and paste your bot token.
-
-4. **Import** `n8n/campus_scraper_workflow.json` into n8n.
-
-5. Update the **Upsert to Supabase** node with your Supabase URL and keys.
-
-6. **Activate** the workflow and send `/fetch` to your Telegram bot!
-
-> 📖 See [`n8n/README.md`](n8n/README.md) for detailed instructions.
-
----
-
 ## ▶️ Running the App
 
-### Quick Start (3 terminals)
+### Quick Start (2 terminals)
 
 **Terminal 1 — Backend:**
 ```bash
@@ -319,11 +271,6 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 cd frontend
 flutter run --dart-define-from-file=.env
-```
-
-**Terminal 3 — n8n (optional):**
-```bash
-docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n n8nio/n8n
 ```
 
 ---
