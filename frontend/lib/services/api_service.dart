@@ -15,12 +15,37 @@ class ApiService {
       : _dio = Dio(BaseOptions(
           baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 60), // Increased for AI response
           headers: {
             'Content-Type': 'application/json',
             if (accessToken != null) 'Authorization': 'Bearer $accessToken',
           },
         ));
+
+  /// Send a request with manual retry logic for resilience.
+  Future<Response> _requestWithRetry(
+    Future<Response> Function() request, {
+    int maxRetries = 2,
+  }) async {
+    int attempts = 0;
+    while (true) {
+      try {
+        return await request();
+      } on DioException catch (e) {
+        attempts++;
+        final isRetryable = e.type != DioExceptionType.cancel &&
+            e.type != DioExceptionType.badResponse;
+        
+        if (attempts > maxRetries || !isRetryable) {
+          rethrow;
+        }
+        
+        final delay = Duration(seconds: attempts * 2);
+        print('API Error: ${e.message}. Retrying in ${delay.inSeconds}s (Attempt $attempts)...');
+        await Future.delayed(delay);
+      }
+    }
+  }
 
   /// Update the auth token (e.g. after login).
   void setAccessToken(String token) {
@@ -72,7 +97,9 @@ class ApiService {
     if (fromDate != null) params['from_date'] = fromDate.toIso8601String().split('T')[0];
     if (toDate != null) params['to_date'] = toDate.toIso8601String().split('T')[0];
 
-    final response = await _dio.get('/events', queryParameters: params);
+    final response = await _requestWithRetry(
+      () => _dio.get('/events', queryParameters: params),
+    );
     final list = response.data as List;
     return list.map((e) => EventModel.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -89,7 +116,9 @@ class ApiService {
 
   /// List all chat sessions for the current user.
   Future<List<ChatSession>> getSessions() async {
-    final response = await _dio.get('/chat/sessions');
+    final response = await _requestWithRetry(
+      () => _dio.get('/chat/sessions'),
+    );
     final list = response.data as List;
     return list.map((e) => ChatSession.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -104,7 +133,9 @@ class ApiService {
 
   /// Get the message history for a session.
   Future<List<MessageModel>> getChatHistory(String sessionId) async {
-    final response = await _dio.get('/chat/history/$sessionId');
+    final response = await _requestWithRetry(
+      () => _dio.get('/chat/history/$sessionId'),
+    );
     final list = response.data as List;
     return list.map((e) => MessageModel.fromJson(e as Map<String, dynamic>)).toList();
   }
@@ -114,10 +145,12 @@ class ApiService {
     required String sessionId,
     required String message,
   }) async {
-    final response = await _dio.post('/chat', data: {
-      'session_id': sessionId,
-      'message': message,
-    });
+    final response = await _requestWithRetry(
+      () => _dio.post('/chat', data: {
+        'session_id': sessionId,
+        'message': message,
+      }),
+    );
     return response.data as Map<String, dynamic>;
   }
 }

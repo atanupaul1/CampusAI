@@ -92,6 +92,7 @@ class SessionResponse(BaseModel):
     id: UUID
     user_id: UUID
     title: str
+    summary: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

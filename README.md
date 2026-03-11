@@ -24,11 +24,11 @@ Ask about events, schedules, campus info, and more — all through an intelligen
 - [Setup Guide](#-setup-guide)
   - [1. Supabase Setup](#1-supabase-setup)
   - [2. Backend Setup](#2-backend-setup)
-  - [3. Frontend Setup](#3-frontend-setup)
-- [Running the App](#-running-the-app)
+  - [3. Student App Setup](#3-student-app-setup)
+  - [4. Admin App Setup](#4-admin-app-setup)
+- [Automation (VS Code)](#-automation-vs-code)
 - [Deployment](#-deployment)
 - [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
@@ -38,11 +38,11 @@ Ask about events, schedules, campus info, and more — all through an intelligen
 |---------|-------------|
 | 🤖 **AI Chat** | Ask campus-related questions powered by Gemini/Groq LLM |
 | 🎤 **Voice Input** | Speak your questions using speech-to-text |
-| 🔊 **Text-to-Speech** | Listen to AI responses read aloud |
-| 📅 **Campus Events** | Browse upcoming and past campus events with filtering |
-| 🔐 **Authentication** | Secure user login/signup via Supabase Auth |
+| 📅 **Event Manager** | Browse events in the Student App; Create/Edit them in the **Admin App** |
+| ❓ **FAQ Builder** | Manage the AI's knowledge base via the Admin App |
+| 🔐 **Admin Portal** | Restricted access for campus staff to manage data securely |
 | 💬 **Chat History** | Persistent chat sessions saved to Supabase |
-| 🌗 **Dark/Light Mode** | Material 3 dynamic theming with system preference support |
+| 🌗 **Dark Mode** | Material 3 adaptive theming |
 
 ---
 
@@ -50,221 +50,77 @@ Ask about events, schedules, campus info, and more — all through an intelligen
 
 ```
 ┌─────────────────┐      ┌──────────────────┐      ┌───────────────┐
-│   Flutter App   │ ───→ │  FastAPI Backend  │ ───→ │   Supabase    │
-│   (Frontend)    │      │   (Python API)    │      │  (DB + Auth)  │
+│   Student App   │ ───→ │  FastAPI Backend  │ ───→ │   Supabase    │
+│   (Flutter)     │      │   (Python API)    │      │  (DB + Auth)  │
 └─────────────────┘      └──────────────────┘      └───────────────┘
-                                │
-                                │ LLM API
-                                ▼
-                         ┌──────────────┐
-                         │ Gemini/Groq  │
-                         │   (AI/LLM)   │
-                         └──────────────┘
+                                 ↑                         ↑
+┌─────────────────┐              │                         │
+│    Admin App    │ ─────────────┴─────────────────────────┘
+│   (Management)  │
+└─────────────────┘
 ```
-
----
-
-## 🧰 Tech Stack
-
-### Frontend (Mobile App)
-- **Flutter 3.x** — Cross-platform mobile framework
-- **Riverpod** — State management
-- **Supabase Flutter** — Auth & database client
-- **Dio** — HTTP client for API calls
-- **Google Fonts (Inter)** — Typography
-- **Speech-to-Text / Flutter TTS** — Voice features
-- **Material 3** — Modern UI with dynamic theming
-
-### Backend (API Server)
-- **FastAPI** — High-performance Python web framework
-- **Supabase Python SDK** — Database operations
-- **Google Gemini / Groq** — LLM for AI chat responses
-- **Pydantic** — Data validation & settings management
-- **Uvicorn** — ASGI server
-
-### Database & Auth
-- **Supabase (PostgreSQL)** — Hosted database with Row Level Security
-- **Supabase Auth** — Email/password authentication
 
 ---
 
 ## 📁 Project Structure
 
-```
-CampusAI/
-├── backend/                    # FastAPI backend server
-│   ├── app/
-│   │   ├── main.py             # App entry point, CORS, routers
-│   │   ├── config.py           # Pydantic settings (loads .env)
-│   │   ├── database.py         # Supabase client initialization
-│   │   ├── dependencies.py     # FastAPI dependency injection
-│   │   ├── models/             # Pydantic request/response schemas
-│   │   ├── routers/
-│   │   │   ├── auth.py         # Auth endpoints (login, register, profile)
-│   │   │   ├── events.py       # Campus events CRUD
-│   │   │   └── chat.py         # AI chat endpoint (Gemini/Groq)
-│   │   └── services/
-│   │       ├── llm_service.py  # LLM integration (Gemini + Groq)
-│   │       └── context_service.py  # Campus context for AI
-│   ├── .env.example            # Environment variable template
-│   └── requirements.txt        # Python dependencies
-│
-├── frontend/                   # Flutter mobile app
-│   ├── lib/
-│   │   ├── main.dart           # App entry, Supabase init, theming
-│   │   ├── models/             # Data models (User, Event, Chat)
-│   │   ├── providers/          # Riverpod providers (auth state)
-│   │   ├── screens/
-│   │   │   ├── login_screen.dart   # Login & registration
-│   │   │   ├── home_screen.dart    # Dashboard / home
-│   │   │   ├── chat_screen.dart    # AI chat interface
-│   │   │   ├── events_screen.dart  # Campus events listing
-│   │   │   ├── profile_screen.dart # User profile
-│   │   │   └── app_shell.dart      # Bottom navigation shell
-│   │   ├── services/
-│   │   │   ├── api_service.dart    # Backend API client (Dio)
-│   │   │   ├── auth_service.dart   # Supabase auth wrapper
-│   │   │   └── tts_service.dart    # Text-to-speech service
-│   │   └── widgets/            # Reusable UI components
-│   ├── .env.example            # Frontend env template
-│   └── pubspec.yaml            # Flutter dependencies
-│
-├── supabase_migration.sql      # Database schema (tables, RLS, indexes)
-├── seed_data.sql               # Sample events & FAQs
-├── DEPLOYMENT.md               # Production deployment guide
-└── .gitignore
-```
-
----
-
-## 📦 Prerequisites
-
-Before you begin, make sure you have the following installed:
-
-| Tool | Version | Download |
-|------|---------|----------|
-| **Flutter SDK** | 3.x+ | [flutter.dev/get-started](https://flutter.dev/docs/get-started/install) |
-| **Python** | 3.11+ | [python.org](https://www.python.org/downloads/) |
-| **Git** | Latest | [git-scm.com](https://git-scm.com/) |
-| **Supabase Account** | Free tier | [supabase.com](https://supabase.com/) |
-| **Gemini API Key** | Free tier | [aistudio.google.com](https://aistudio.google.com/app/apikey) |
+- `frontend/`: Original student-facing Flutter application.
+- `admin_app/`: **[NEW]** Administrative mobile app for managing Events and FAQs.
+- `backend/`: FastAPI server (Primary: Gemini, Fallback: Groq).
+- `supabase_migration.sql`: Core database schema.
+- `admin_setup.sql`: SQL snippet to enable Admin roles and security.
 
 ---
 
 ## 🚀 Setup Guide
 
 ### 1. Supabase Setup
-
-1. Create a free project at [supabase.com](https://supabase.com/).
-
-2. Go to **SQL Editor** and run the migration script:
+1. Run `supabase_migration.sql` in the SQL Editor.
+2. Run `admin_setup.sql` to enable roles.
+3. **Important**: Promte yourself to admin by running:
    ```sql
-   -- Copy and paste the entire contents of supabase_migration.sql
-   ```
-   This creates 5 tables: `users`, `chat_sessions`, `chat_messages`, `campus_events`, `campus_faqs`.
-
-3. **(Optional)** Seed with sample data:
-   ```sql
-   -- Copy and paste the entire contents of seed_data.sql
+   UPDATE public.users SET role = 'admin' WHERE email = 'YOUR_EMAIL';
    ```
 
-4. Note down your credentials from **Settings → API**:
-   - **Project URL**: `https://xxxxxxxx.supabase.co`
-   - **anon (public) key**: `eyJhbGci...`
-   - **service_role key**: `eyJhbGci...`
+### 2. Backend Setup (Render.com)
+The backend is optimized for Render.
+- **Build Command**: `pip install -r requirements.txt`
+- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Set `PYTHON_VERSION` to `3.11.0` in Environment Variables.
 
----
-
-### 2. Backend Setup
-
+### 3. Student App Setup
 ```bash
-# Clone the repository
-git clone https://github.com/atanupaul1/CampusAI.git
-cd CampusAI/backend
-
-# Create a virtual environment
-python -m venv venv
-
-# Activate it
-# Windows:
-.\venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create your .env file
-cp .env.example .env
-```
-
-Edit `backend/.env` with your actual credentials:
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_KEY=your-supabase-service-role-key
-GEMINI_API_KEY=your-gemini-api-key
-GROQ_API_KEY=your-groq-api-key          # optional
-UNIVERSITY_NAME=Your University Name
-APP_ENV=development
-```
-
-Start the backend:
-```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Verify it's running: open [http://localhost:8000/health](http://localhost:8000/health) — should return `{"status": "ok"}`.
-
-> 📖 **API Docs**: Visit [http://localhost:8000/docs](http://localhost:8000/docs) for the interactive Swagger UI.
-
----
-
-### 3. Frontend Setup
-
-```bash
-cd CampusAI/frontend
-
-# Install Flutter dependencies
-flutter pub get
-
-# Create your .env file
-cp .env.example .env
-```
-
-Edit `frontend/.env` with your credentials:
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-supabase-anon-key
-API_BASE_URL=http://YOUR_COMPUTER_IP:8000
-```
-
-> 💡 **Finding your IP**: Run `ipconfig` (Windows) or `ifconfig` (Mac/Linux) and use the IPv4 address under your WiFi adapter (e.g., `192.168.1.8`).
-
-Run the app:
-```bash
-# Connect your phone via USB (with USB debugging enabled)
+cd frontend
 flutter run --dart-define-from-file=.env
 ```
 
-Or build an APK:
+### 4. Admin App Setup
+Dedicated app for staff to manage the database.
 ```bash
-flutter build apk --dart-define-from-file=.env
+cd admin_app
+flutter run --dart-define-from-file=.env
 ```
-
-> ⚠️ **Important**: Your phone must be on the **same WiFi network** as your computer for the local backend connection to work.
 
 ---
 
-## ▶️ Running the App
+## 🤖 Automation (VS Code)
+Both apps include a `.vscode/launch.json`. You can simply press **F5** in VS Code to run the apps; it will automatically include your `.env` secrets.
 
-### Quick Start (2 terminals)
+---
 
-**Terminal 1 — Backend:**
-```bash
-cd backend
-.\venv\Scripts\activate          # Windows
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+## 🌐 Deployment
+- **Backend**: Hosted on Render at `https://campus-ai-backend-wlpn.onrender.com`.
+- **Database**: Managed on Supabase.
+- **APK**: Build via `flutter build apk --release --dart-define-from-file=.env`.
+
+---
+
+<div align="center">
+
+**Built with ❤️ for ICFAI University, Tripura**
+
+</div>
+p.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 **Terminal 2 — Frontend:**

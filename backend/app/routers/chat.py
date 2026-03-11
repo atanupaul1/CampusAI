@@ -26,6 +26,7 @@ from app.models.schemas import (
     SessionResponse,
 )
 from app.services.llm_service import get_ai_response
+from app.services.summarization_service import update_session_summary_if_needed
 
 router = APIRouter()
 
@@ -206,7 +207,7 @@ async def chat(
     # Step 1 — Verify session ownership
     session = (
         db.table("chat_sessions")
-        .select("user_id")
+        .select("user_id, summary")
         .eq("id", session_id_str)
         .single()
         .execute()
@@ -216,6 +217,8 @@ async def chat(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Chat session not found",
         )
+    
+    session_summary = session.data.get("summary", "")
 
     # Step 2 — Save the user message
     try:
@@ -250,6 +253,7 @@ async def chat(
         ai_reply = await get_ai_response(
             user_message=body.message,
             chat_history=chat_history,
+            session_summary=session_summary,
         )
     except Exception as exc:
         raise HTTPException(
@@ -274,6 +278,11 @@ async def chat(
         db.table("chat_sessions").update({
             "updated_at": now.isoformat(),
         }).eq("id", session_id_str).execute()
+        
+        # Step 6.1 — Trigger session summarization check
+        # We don't await this so it doesn't block the user response
+        import asyncio
+        asyncio.create_task(update_session_summary_if_needed(session_id_str, db))
     except Exception:
         pass  # non-critical
 

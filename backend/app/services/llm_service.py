@@ -17,6 +17,7 @@ import httpx
 
 from app.config import get_settings
 from app.services.context_service import build_campus_context, count_tokens, truncate_to_tokens
+from app.utils.retry_utils import async_retry
 
 # ------------------------------------------------------------------ #
 # Constants
@@ -26,12 +27,13 @@ GEMINI_MODEL = "gemini-2.0-flash"
 GROQ_MODEL = "llama-3.3-70b-versatile"  # free tier on Groq
 
 
-def _build_system_prompt(university_name: str, campus_context: str) -> str:
-    """Construct the system prompt with campus context injected.
+def _build_system_prompt(university_name: str, campus_context: str, session_summary: str = "") -> str:
+    """Construct the system prompt with campus context and history summary injected.
 
     Args:
         university_name: Name of the university for personalisation.
         campus_context: Pre-formatted events + FAQs string.
+        session_summary: Previous conversation summary for long-term memory.
 
     Returns:
         The full system prompt string.
@@ -44,6 +46,9 @@ def _build_system_prompt(university_name: str, campus_context: str) -> str:
         "the student can find the answer. Never make up event dates, office hours, or "
         "official policies."
     )
+
+    if session_summary:
+        base += f"\n\nHere is a summary of your previous conversation history:\n{session_summary}"
 
     if campus_context:
         base += (
@@ -58,24 +63,26 @@ def _prepare_messages(
     user_message: str,
     chat_history: List[dict],
     university_name: str,
+    session_summary: str = "",
 ) -> tuple[str, list[dict]]:
     """Build the system prompt and message list for the LLM call.
 
-    1. Builds campus context (events + FAQs) and injects it into the
-       system prompt.
-    2. Includes the last 5 messages from chat history for continuity.
-    3. Truncates context if total tokens exceed MAX_CONTEXT_TOKENS.
+    1. Builds campus context (events + FAQs).
+    2. Constructs system prompt with summary and campus context.
+    3. Includes the last 5 messages from chat history for continuity.
+    4. Truncates context if total tokens exceed MAX_CONTEXT_TOKENS.
 
     Args:
         user_message: The new message from the user.
         chat_history: Previous messages (dicts with 'role' and 'content').
         university_name: Name of the university.
+        session_summary: Optional summary of older history.
 
     Returns:
         A tuple of (system_prompt, messages_list).
     """
     campus_context = build_campus_context(max_tokens=1200)
-    system_prompt = _build_system_prompt(university_name, campus_context)
+    system_prompt = _build_system_prompt(university_name, campus_context, session_summary)
 
     # Keep last 5 messages for continuity
     recent_history = chat_history[-5:] if len(chat_history) > 5 else chat_history
@@ -98,6 +105,7 @@ def _prepare_messages(
 # Gemini API
 # ------------------------------------------------------------------ #
 
+@async_retry(retries=3, base_delay=1.0)
 async def call_gemini(
     system_prompt: str,
     messages: list[dict],
@@ -160,6 +168,7 @@ async def call_gemini(
 # Groq API (fallback)
 # ------------------------------------------------------------------ #
 
+@async_retry(retries=3, base_delay=1.0)
 async def call_groq(
     system_prompt: str,
     messages: list[dict],
@@ -215,6 +224,7 @@ async def call_groq(
 async def get_ai_response(
     user_message: str,
     chat_history: List[dict],
+    session_summary: str = "",
 ) -> str:
     """Get an AI response to the user's message.
 
@@ -224,6 +234,7 @@ async def get_ai_response(
     Args:
         user_message: The new user message.
         chat_history: List of previous messages with 'role' and 'content'.
+        session_summary: Optional summary of older conversation history.
 
     Returns:
         The AI-generated reply string.
@@ -236,6 +247,7 @@ async def get_ai_response(
         user_message=user_message,
         chat_history=chat_history,
         university_name=settings.university_name,
+        session_summary=session_summary,
     )
 
     # --- Attempt 1: Gemini ---

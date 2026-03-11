@@ -15,6 +15,7 @@ from supabase import Client
 
 from app.database import get_supabase_admin_client
 from app.models.schemas import ErrorResponse, EventResponse
+from app.services.cache_service import context_cache
 
 router = APIRouter()
 
@@ -93,3 +94,18 @@ async def get_event(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Event not found: {str(exc)}",
         ) from exc
+
+
+@router.post(
+    "/clear-cache",
+    status_code=status.HTTP_200_OK,
+    summary="Clear the campus context cache",
+)
+async def clear_campus_cache():
+    """Manually clear the cached events and FAQs.
+    
+    This should be called by the Admin App or a webhook after
+    making changes to the database.
+    """
+    context_cache.delete("campus_context")
+    return {"status": "cache cleared"}

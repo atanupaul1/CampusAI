@@ -12,6 +12,7 @@ import tiktoken
 from supabase import Client
 
 from app.database import get_supabase_admin_client
+from app.services.cache_service import context_cache
 
 
 # Use cl100k_base encoder (same family as GPT-4 / Gemini tokenisers)
@@ -86,6 +87,11 @@ def build_campus_context(
     if db is None:
         db = get_supabase_admin_client()
 
+    # Check cache first
+    cached_ctx = context_cache.get("campus_context")
+    if cached_ctx:
+        return truncate_to_tokens(cached_ctx, max_tokens)
+
     # Fetch the 10 most recent / upcoming events
     try:
         events_result = (
@@ -113,8 +119,10 @@ def build_campus_context(
 
     events_text = _format_events(events)
     faqs_text = _format_faqs(faqs)
-
     full_context = "\n\n".join(filter(None, [events_text, faqs_text]))
+
+    # Store in cache
+    context_cache.set("campus_context", full_context)
 
     # Truncate campus data first if over token budget
     return truncate_to_tokens(full_context, max_tokens)

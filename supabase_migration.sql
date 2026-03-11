@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     email       TEXT UNIQUE NOT NULL,
     display_name TEXT,
     avatar_url  TEXT,
+    role        TEXT DEFAULT 'user',
     created_at  TIMESTAMPTZ DEFAULT now()
 );
 
@@ -100,10 +101,17 @@ CREATE POLICY "Anyone can read events"
     ON public.campus_events FOR SELECT
     USING (true);
 
--- Only service_role can insert/update (n8n automation or admin)
-CREATE POLICY "Service role can manage events"
+-- Only service_role or Admins can insert/update
+CREATE POLICY "Admins and Service role can manage events"
     ON public.campus_events FOR ALL
-    USING (auth.role() = 'service_role');
+    USING (
+        auth.role() = 'service_role' 
+        OR EXISTS (
+            SELECT 1 FROM public.users 
+            WHERE users.id = auth.uid() 
+            AND users.role = 'admin'
+        )
+    );
 
 CREATE INDEX idx_campus_events_category ON public.campus_events(category);
 CREATE INDEX idx_campus_events_start ON public.campus_events(start_time);
@@ -126,9 +134,16 @@ CREATE POLICY "Anyone can read FAQs"
     ON public.campus_faqs FOR SELECT
     USING (true);
 
-CREATE POLICY "Service role can manage FAQs"
+CREATE POLICY "Admins and Service role can manage FAQs"
     ON public.campus_faqs FOR ALL
-    USING (auth.role() = 'service_role');
+    USING (
+        auth.role() = 'service_role'
+        OR EXISTS (
+            SELECT 1 FROM public.users 
+            WHERE users.id = auth.uid() 
+            AND users.role = 'admin'
+        )
+    );
 
 -- ============================================================
 -- Done! Verify by checking the Table Editor in Supabase.

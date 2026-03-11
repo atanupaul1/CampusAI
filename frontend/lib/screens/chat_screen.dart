@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../models/message_model.dart';
 import '../providers/chat_provider.dart';
 import '../services/tts_service.dart';
 import '../widgets/message_bubble.dart';
@@ -174,11 +175,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (chatState.error != null)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               color: colorScheme.errorContainer,
-              child: Text(
-                chatState.error!,
-                style: TextStyle(color: colorScheme.onErrorContainer, fontSize: 13),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      chatState.error!,
+                      style: TextStyle(color: colorScheme.onErrorContainer, fontSize: 13),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      final lastMsg = chatState.messages.lastOrNull;
+                      if (lastMsg != null && lastMsg.role == MessageRole.user) {
+                        ref.read(chatProvider.notifier).sendMessage(lastMsg.content);
+                      }
+                    },
+                    child: Text('Retry', style: TextStyle(color: colorScheme.error)),
+                  ),
+                ],
               ),
             ),
 
