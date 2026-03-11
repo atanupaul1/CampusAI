@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎓 Campus AI Assistant
+# 🎓 Campus AI
 
 **A smart campus companion app powered by AI — built with Flutter, FastAPI, and Supabase.**
 

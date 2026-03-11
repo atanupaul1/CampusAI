@@ -27,7 +27,7 @@ class AdminApp extends ConsumerWidget {
     final authState = ref.watch(adminAuthProvider);
 
     return MaterialApp(
-      title: 'Campus AI Admin',
+      title: 'Campus ADMIN',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

@@ -55,7 +55,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   size: 80, color: Color(0xFF1565C0)),
               const SizedBox(height: 24),
               Text(
-                'Campus AI Admin',
+                'Campus ADMIN',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 28,

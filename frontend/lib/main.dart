@@ -1,4 +1,4 @@
-/// Campus AI Assistant — App Entry Point
+/// Campus AI — App Entry Point
 ///
 /// Initializes Supabase, sets up the Material 3 theme with a
 /// university-themed color scheme, configures GoRouter for
@@ -37,7 +37,7 @@ class CampusAIApp extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return MaterialApp(
-      title: 'Campus AI Assistant',
+      title: 'Campus AI',
       debugShowCheckedModeBanner: false,
 
       // -------------------- Theme --------------------

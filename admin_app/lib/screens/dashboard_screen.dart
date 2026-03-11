@@ -18,7 +18,7 @@ class DashboardScreen extends ConsumerWidget {
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          'Campus Admin',
+          'Campus ADMIN',
           style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         centerTitle: false,
