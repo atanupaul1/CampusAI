@@ -39,7 +39,8 @@ class AuthService {
       
       return UserModel.fromJson(data);
     } catch (e) {
-      return null;
+      print('DEBUG: Database Fetch Failed: $e');
+      rethrow; // Throw the error up so the UI can show it
     }
   }
 

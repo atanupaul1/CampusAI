@@ -45,7 +45,7 @@ class AdminApp extends ConsumerWidget {
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            minimumSize: const Size.fromHeight(50),
+            minimumSize: const Size(64, 50), // Fix: Don't force infinity width globally
           ),
         ),
       ),

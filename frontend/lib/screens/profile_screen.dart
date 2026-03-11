@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import 'feedback_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -81,6 +82,15 @@ class ProfileScreen extends ConsumerWidget {
               title: 'App Version',
               subtitle: '1.0.0',
             ),
+            _ProfileTile(
+              icon: Icons.feedback_outlined,
+              title: 'Share Feedback',
+              subtitle: 'Help us improve',
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FeedbackScreen()),
+              ),
+            ),
 
             const SizedBox(height: 32),
 
@@ -131,11 +141,13 @@ class _ProfileTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _ProfileTile({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -155,6 +167,7 @@ class _ProfileTile extends StatelessWidget {
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
         subtitle: Text(subtitle),
+        onTap: onTap,
         tileColor: colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),

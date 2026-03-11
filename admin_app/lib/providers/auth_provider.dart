@@ -74,20 +74,21 @@ class AdminAuthNotifier extends StateNotifier<AdminAuthState> {
         } else {
           state = state.copyWith(
             status: AdminAuthStatus.unauthorized,
-            error: 'You do not have administrative privileges.',
+            error: 'You are logged in, but your role is "${profile.role}". Admins only.',
           );
           await _authService.signOut();
         }
       } else {
         state = state.copyWith(
           status: AdminAuthStatus.unauthenticated,
-          error: 'Invalid credentials or network error.',
+          error: 'Login Success, but Profile was NULL for some reason.',
         );
+        await _authService.signOut();
       }
     } catch (e) {
       state = state.copyWith(
         status: AdminAuthStatus.unauthenticated,
-        error: e.toString(),
+        error: 'Database Error: $e',
       );
     }
   }

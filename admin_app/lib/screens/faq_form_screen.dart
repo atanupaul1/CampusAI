@@ -19,7 +19,7 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
 
   bool _isSaving = false;
 
-  final List<String> _categories = ['Admission', 'Exams', 'Hostel', 'Library', 'General'];
+  final List<String> _categories = ['Academic', 'Workshop', 'Cultural', 'Sports', 'Facilities', 'Admission', 'Exams', 'Hostel', 'Library', 'General'];
 
   @override
   void initState() {
@@ -27,6 +27,10 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
     _questionController = TextEditingController(text: widget.faq?['question']);
     _answerController = TextEditingController(text: widget.faq?['answer']);
     _category = widget.faq?['category'];
+    // Ensure the current category exists in the list to prevent crash
+    if (_category != null && !_categories.contains(_category)) {
+      _categories.add(_category!);
+    }
   }
 
   @override
