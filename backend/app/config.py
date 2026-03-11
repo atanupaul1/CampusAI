@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     groq_api_key: str = ""
 
+    # Firebase
+    firebase_service_account_path: str = "serviceAccountKey.json"
+
     # App
     university_name: str = "Your University"
     app_env: str = "development"

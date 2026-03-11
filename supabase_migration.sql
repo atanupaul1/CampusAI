@@ -145,6 +145,52 @@ CREATE POLICY "Admins and Service role can manage FAQs"
         )
     );
 
+-- Migration: Add summary column for Conversation Memory (1B)
+-- Run this in the Supabase SQL Editor
+
+-- 1. Add the column
+ALTER TABLE public.chat_sessions 
+ADD COLUMN IF NOT EXISTS summary TEXT;
+
+-- 2. Update existing policies if necessary (usually 'ALL' covers it, but good to be explicit)
+-- Since we already have:
+-- CREATE POLICY "Users can CRUD own sessions" ON public.chat_sessions FOR ALL USING (auth.uid() = user_id);
+-- Any updates to the summary column will be allowed for the owner.
+
+-- 3. (Optional) Comment on column
+COMMENT ON COLUMN public.chat_sessions.summary IS 'LLM-generated summary of the conversation history for long-term memory.';
+
+
+-- ============================================================
+-- Migration: Push Notifications (2A)
+-- ============================================================
+
+-- 1. Create table for FCM tokens
+CREATE TABLE IF NOT EXISTS public.device_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    token TEXT UNIQUE NOT NULL,
+    platform TEXT, -- 'android' or 'ios'
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, token)
+);
+
+-- 2. Add notification preferences to users
+ALTER TABLE public.users 
+ADD COLUMN IF NOT EXISTS notification_preferences JSONB DEFAULT '{"Academic": true, "Workshop": true, "Cultural": true, "Sports": true, "Other": true}';
+
+-- 3. Enable RLS on device_tokens
+ALTER TABLE public.device_tokens ENABLE ROW LEVEL SECURITY;
+
+-- 4. Policies for device_tokens
+CREATE POLICY "Users can manage their own tokens" ON public.device_tokens
+    FOR ALL USING (auth.uid() = user_id);
+
+-- 5. Comment for clarity
+COMMENT ON TABLE public.device_tokens IS 'Stores FCM tokens for user devices to support push notifications.';
+COMMENT ON COLUMN public.users.notification_preferences IS 'User toggles for different notification categories.';
+
+
 -- ============================================================
 -- Done! Verify by checking the Table Editor in Supabase.
 -- ============================================================

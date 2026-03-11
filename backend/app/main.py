@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.models.schemas import HealthResponse
-from app.routers import auth, events, chat
+from app.routers import auth, events, chat, notifications, profile
 
 settings = get_settings()
 
@@ -40,6 +40,8 @@ def create_app() -> FastAPI:
     application.include_router(auth.router, prefix="/auth", tags=["Auth"])
     application.include_router(events.router, prefix="/events", tags=["Events"])
     application.include_router(chat.router, prefix="/chat", tags=["Chat"])
+    application.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+    application.include_router(profile.router, prefix="/profile", tags=["Profile"])
 
     # ------------------------------------------------------------------
     # Health check (required for Render zero-downtime deploys)

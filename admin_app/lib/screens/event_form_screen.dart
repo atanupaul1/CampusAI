@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../models/event_model.dart';
 
 class EventFormScreen extends StatefulWidget {
@@ -81,9 +83,13 @@ class _EventFormScreenState extends State<EventFormScreen> {
       };
 
       if (widget.event == null) {
-        await _supabase.from('campus_events').insert(data);
+        final res = await _supabase.from('campus_events').insert(data).select().single();
+        // Trigger notification for new events
+        await _triggerNotification(res['id'], res['title'], res['category']);
       } else {
         await _supabase.from('campus_events').update(data).eq('id', widget.event!.id);
+        // Optional: Trigger notification for updates too
+        await _triggerNotification(widget.event!.id, data['title']!, data['category']!);
       }
 
       if (mounted) Navigator.pop(context, true);
@@ -93,6 +99,25 @@ class _EventFormScreenState extends State<EventFormScreen> {
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _triggerNotification(String eventId, String title, String category) async {
+    try {
+      // Replace with your actual backend URL
+      const backendUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:8000');
+      
+      await http.post(
+        Uri.parse('$backendUrl/notifications/event-trigger'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'event_id': eventId,
+          'title': title,
+          'category': category,
+        }),
+      );
+    } catch (e) {
+      debugPrint('Failed to trigger notification: $e');
     }
   }
 

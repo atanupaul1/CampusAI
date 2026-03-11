@@ -5,19 +5,21 @@
 /// preserve screen state across tab switches.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'home_screen.dart';
 import 'chat_screen.dart';
 import 'events_screen.dart';
 import 'profile_screen.dart';
+import '../providers/fcm_provider.dart';
 
-class AppShell extends StatefulWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  State<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends ConsumerState<AppShell> {
   int _currentIndex = 0;
 
   static const _screens = [
@@ -29,6 +31,9 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Trigger FCM initialization
+    ref.watch(fcmInitializerProvider);
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,

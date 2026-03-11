@@ -3,6 +3,7 @@
 /// Manages authentication state across the app. Provides the
 /// current user, login/register methods, and token management.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../services/auth_service.dart';
@@ -99,12 +100,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
           );
           if (_authService.accessToken != null) {
             _ref.read(apiServiceProvider).setAccessToken(_authService.accessToken!);
+            _fetchProfile(); // Fetch full profile with preferences
           }
         }
       } else if (event == AuthChangeEvent.signedOut) {
         state = const AuthState(status: AuthStatus.unauthenticated);
       }
     });
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final userData = await _ref.read(apiServiceProvider).getProfile();
+      final user = UserModel.fromJson(userData);
+      state = state.copyWith(user: user);
+    } catch (e) {
+      debugPrint('Failed to fetch profile: $e');
+    }
   }
 
   Future<void> login(String email, String password) async {

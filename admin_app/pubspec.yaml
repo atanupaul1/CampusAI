@@ -35,6 +35,7 @@ dependencies:
 
   # Networking
   dio: ^5.7.0
+  http: ^1.2.2
 
   # Supabase Auth & DB
   supabase_flutter: ^2.8.0
