@@ -153,31 +153,4 @@ class ApiService {
     );
     return response.data as Map<String, dynamic>;
   }
-
-  /// Register FCM token for push notifications.
-  Future<void> registerDeviceToken(String token, String platform) async {
-    await _requestWithRetry(
-      () => _dio.post('/notifications/token', data: {
-        'token': token,
-        'platform': platform,
-      }),
-    );
-  }
-
-  /// Update user notification preferences.
-  Future<void> updateNotificationPreferences(Map<String, bool> prefs) async {
-    await _requestWithRetry(
-      () => _dio.patch('/profile', data: {
-        'notification_preferences': prefs,
-      }),
-    );
-  }
-
-  /// Get current user profile from backend.
-  Future<Map<String, dynamic>> getProfile() async {
-    final response = await _requestWithRetry(
-      () => _dio.get('/profile'),
-    );
-    return response.data as Map<String, dynamic>;
-  }
 }

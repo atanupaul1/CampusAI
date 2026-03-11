@@ -84,47 +84,6 @@ class ProfileScreen extends ConsumerWidget {
 
             const SizedBox(height: 32),
 
-            // Notification Preferences
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Notification Preferences',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            
-            // Build preference switches
-            if (user?.notificationPreferences != null)
-              ...user!.notificationPreferences!.keys.map((category) {
-                return SwitchListTile(
-                  title: Text(category),
-                  value: user.notificationPreferences![category] ?? false,
-                  activeColor: colorScheme.primary,
-                  onChanged: (value) async {
-                    // Update locally first (optimistic UI)
-                    final newPrefs = Map<String, bool>.from(user.notificationPreferences!);
-                    newPrefs[category] = value;
-                    
-                    // Show loading if needed or just handle via API
-                    try {
-                      await ref.read(apiServiceProvider).updateNotificationPreferences(newPrefs);
-                      // In a real app, you'd update the auth state provider here
-                      // For now, let's assume the user has to refresh or the listener is fast
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to update: $e')),
-                      );
-                    }
-                  },
-                );
-              }),
-
-            const SizedBox(height: 32),
-
             // Logout button
             SizedBox(
               width: double.infinity,

@@ -9,7 +9,6 @@ class UserModel {
   final String? displayName;
   final String? avatarUrl;
   final DateTime? createdAt;
-  final Map<String, bool>? notificationPreferences;
 
   const UserModel({
     required this.id,
@@ -17,7 +16,6 @@ class UserModel {
     this.displayName,
     this.avatarUrl,
     this.createdAt,
-    this.notificationPreferences,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -29,9 +27,6 @@ class UserModel {
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
-      notificationPreferences: json['notification_preferences'] != null
-          ? Map<String, bool>.from(json['notification_preferences'] as Map)
-          : null,
     );
   }
 
@@ -42,7 +37,6 @@ class UserModel {
       'display_name': displayName,
       'avatar_url': avatarUrl,
       'created_at': createdAt?.toIso8601String(),
-      'notification_preferences': notificationPreferences,
     };
   }
 }
