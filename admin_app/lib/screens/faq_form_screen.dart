@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class FAQFormScreen extends StatefulWidget {
   final Map<String, dynamic>? faq;
@@ -69,47 +70,110 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final inputDecoration = InputDecoration(
+      filled: true,
+      fillColor: const Color(0xFFEBE6DC),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.all(20),
+      labelStyle: const TextStyle(color: Colors.black54),
+      floatingLabelBehavior: FloatingLabelBehavior.never,
+    );
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.faq == null ? 'Add FAQ' : 'Edit FAQ')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _questionController,
-                decoration: const InputDecoration(labelText: 'Question'),
-                maxLines: 2,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+      backgroundColor: const Color(0xFFF3EFE6),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 28),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _answerController,
-                decoration: const InputDecoration(labelText: 'Answer'),
-                maxLines: 8,
-                validator: (v) => v!.isEmpty ? 'Required' : null,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: Text(
+                widget.faq == null ? 'Add FAQ' : 'Edit FAQ',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _category,
-                decoration: const InputDecoration(labelText: 'Category'),
-                items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: (v) => setState(() => _category = v),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _questionController,
+                        decoration: inputDecoration.copyWith(labelText: 'Question'),
+                        maxLines: 2,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _answerController,
+                        decoration: inputDecoration.copyWith(labelText: 'Answer'),
+                        maxLines: 8,
+                        validator: (v) => v!.isEmpty ? 'Required' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _category,
+                        decoration: inputDecoration.copyWith(labelText: 'Category'),
+                        items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                        onChanged: (v) => setState(() => _category = v),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 56,
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF2E2E2E),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          onPressed: _isSaving ? null : _save,
+                          child: _isSaving
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : Text(
+                                  widget.faq == null ? 'Save FAQ' : 'Update FAQ',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Note: The AI Assistant uses these FAQs to answer students instantly.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _isSaving ? null : _save,
-                child: _isSaving ? const CircularProgressIndicator(color: Colors.white) : const Text('Save FAQ'),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Note: The AI Assistant uses these FAQs to answer students instantly.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

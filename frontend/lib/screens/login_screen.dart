@@ -64,18 +64,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // University Logo Placeholder
-                  Container(
-                    width: 100,
+                  Image.asset(
+                    'assets/logo/campus_ai.png',
                     height: 100,
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.school_rounded,
-                      size: 50,
-                      color: colorScheme.onPrimaryContainer,
-                    ),
                   ),
                   const SizedBox(height: 16),
 
