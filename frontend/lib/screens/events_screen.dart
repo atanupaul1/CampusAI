@@ -1,66 +1,8 @@
-/// Campus AI Assistant — Events Screen
-///
-/// Scrollable list of campus events with category filtering.
-/// Pulls data from the FastAPI /events endpoint via the API service.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/event_model.dart';
-import '../providers/auth_provider.dart';
 import '../widgets/event_card.dart';
+import '../providers/events_provider.dart';
 
-// --- Events State & Provider ---
-
-class EventsState {
-  final List<EventModel> events;
-  final bool isLoading;
-  final String? error;
-  final String? selectedCategory;
-
-  const EventsState({
-    this.events = const [],
-    this.isLoading = false,
-    this.error,
-    this.selectedCategory,
-  });
-
-  EventsState copyWith({
-    List<EventModel>? events,
-    bool? isLoading,
-    String? error,
-    String? selectedCategory,
-  }) {
-    return EventsState(
-      events: events ?? this.events,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-      selectedCategory: selectedCategory,
-    );
-  }
-}
-
-class EventsNotifier extends StateNotifier<EventsState> {
-  final Ref _ref;
-
-  EventsNotifier(this._ref) : super(const EventsState());
-
-  Future<void> loadEvents({String? category}) async {
-    state = state.copyWith(isLoading: true, error: null, selectedCategory: category);
-    try {
-      final api = _ref.read(apiServiceProvider);
-      final events = await api.getEvents(category: category);
-      state = state.copyWith(events: events, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
-  }
-}
-
-final eventsProvider = StateNotifierProvider<EventsNotifier, EventsState>((ref) {
-  return EventsNotifier(ref);
-});
-
-// --- Screen ---
 
 class EventsScreen extends ConsumerStatefulWidget {
   const EventsScreen({super.key});
@@ -70,7 +12,15 @@ class EventsScreen extends ConsumerStatefulWidget {
 }
 
 class _EventsScreenState extends ConsumerState<EventsScreen> {
-  static const _categories = ['All', 'Academic', 'Social', 'Sports', 'Workshop', 'Seminar'];
+  static const _categories = ['All', 'Academic', 'Workshop', 'Sports', 'Music', 'Tech', 'Exam'];
+  bool _isSearching = false;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -83,105 +33,195 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
   @override
   Widget build(BuildContext context) {
     final eventsState = ref.watch(eventsProvider);
-    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Campus Events',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-      ),
-      body: Column(
-        children: [
-          // Category filter chips
-          SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                final isSelected = (eventsState.selectedCategory == null && cat == 'All') ||
-                    eventsState.selectedCategory == cat;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: FilterChip(
-                    label: Text(cat),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      ref.read(eventsProvider.notifier).loadEvents(
-                            category: cat == 'All' ? null : cat,
-                          );
-                    },
-                    selectedColor: colorScheme.primaryContainer,
-                    checkmarkColor: colorScheme.primary,
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Events list
-          Expanded(
-            child: eventsState.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : eventsState.error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.error_outline_rounded,
-                                size: 48, color: colorScheme.error),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Failed to load events',
-                              style: TextStyle(color: colorScheme.error),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: _isSearching 
+                ? Container(
+                    height: 48, // Reduced height
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(24), // Rounded corners
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, size: 20, color: Colors.grey.shade600),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            autofocus: true,
+                            style: const TextStyle(fontSize: 15),
+                            decoration: InputDecoration(
+                              hintText: 'Search events...',
+                              border: InputBorder.none,
+                              hintStyle: TextStyle(color: Colors.grey.shade500),
+                              isDense: true,
+                              contentPadding: EdgeInsets.zero,
                             ),
-                            const SizedBox(height: 8),
-                            FilledButton.tonal(
-                              onPressed: () =>
-                                  ref.read(eventsProvider.notifier).loadEvents(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
+                            onChanged: (val) {
+                              ref.read(eventsProvider.notifier).setSearchQuery(val);
+                            },
+                          ),
                         ),
-                      )
-                    : eventsState.events.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.event_busy_rounded,
-                                    size: 64,
-                                    color: colorScheme.onSurfaceVariant
-                                        .withValues(alpha: 0.4)),
-                                const SizedBox(height: 12),
-                                Text(
-                                  'No events found',
-                                  style: TextStyle(
-                                      color: colorScheme.onSurfaceVariant),
-                                ),
-                              ],
-                            ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () => ref
-                                .read(eventsProvider.notifier)
-                                .loadEvents(
-                                    category: eventsState.selectedCategory),
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: eventsState.events.length,
-                              itemBuilder: (context, index) {
-                                return EventCard(
-                                  event: eventsState.events[index],
-                                );
-                              },
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: () {
+                            setState(() {
+                              _isSearching = false;
+                              _searchController.clear();
+                            });
+                            ref.read(eventsProvider.notifier).setSearchQuery('');
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Discover',
+                            style: textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 32,
                             ),
                           ),
+                          Text(
+                            'University Campus Events',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.refresh_rounded),
+                            onPressed: () {
+                              ref.read(eventsProvider.notifier).loadEvents(
+                                category: eventsState.selectedCategory,
+                              );
+                            },
+                            tooltip: 'Refresh events',
+                          ),
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () {
+                              setState(() => _isSearching = true);
+                            },
+                            borderRadius: BorderRadius.circular(24),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surfaceContainer,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.search, size: 24),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+            ),
+
+            // Categories
+            SizedBox(
+              height: 50,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final cat = _categories[index];
+                  final isSelected = (eventsState.selectedCategory == null && cat == 'All') ||
+                      eventsState.selectedCategory == cat;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: ChoiceChip(
+                      label: Text(
+                        cat,
+                        style: TextStyle(
+                          color: isSelected 
+                              ? Theme.of(context).colorScheme.onPrimary 
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      selected: isSelected,
+                      onSelected: (_) {
+                        ref.read(eventsProvider.notifier).loadEvents(
+                          category: cat == 'All' ? null : cat,
+                        );
+                      },
+                      selectedColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      surfaceTintColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: BorderSide(
+                          color: isSelected ? Colors.transparent : Theme.of(context).dividerColor,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Events List
+            Expanded(
+              child: eventsState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : eventsState.filteredEvents.isEmpty
+                      ? _buildEmptyState()
+                      : RefreshIndicator(
+                          onRefresh: () => ref
+                              .read(eventsProvider.notifier)
+                              .loadEvents(category: eventsState.selectedCategory),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                            itemCount: eventsState.filteredEvents.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 24),
+                                child: EventCard(event: eventsState.filteredEvents[index]),
+                              );
+                            },
+                          ),
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_busy_rounded, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            'No events found',
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 16),
           ),
         ],
       ),

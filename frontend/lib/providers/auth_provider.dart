@@ -3,6 +3,7 @@
 /// Manages authentication state across the app. Provides the
 /// current user, login/register methods, and token management.
 
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../services/auth_service.dart';
@@ -33,22 +34,26 @@ class AuthState {
   final AuthStatus status;
   final UserModel? user;
   final String? errorMessage;
+  final bool isProfileUpdating;
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
+    this.isProfileUpdating = false,
   });
 
   AuthState copyWith({
     AuthStatus? status,
     UserModel? user,
     String? errorMessage,
+    bool? isProfileUpdating,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
       errorMessage: errorMessage,
+      isProfileUpdating: isProfileUpdating ?? this.isProfileUpdating,
     );
   }
 }
@@ -74,6 +79,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             id: user.id,
             email: user.email ?? '',
             displayName: user.userMetadata?['display_name'] as String?,
+            avatarUrl: user.userMetadata?['avatar_url'] as String?,
           ),
         );
         _ref.read(apiServiceProvider).setAccessToken(_authService.accessToken!);
@@ -95,6 +101,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
               id: user.id,
               email: user.email ?? '',
               displayName: user.userMetadata?['display_name'] as String?,
+              avatarUrl: user.userMetadata?['avatar_url'] as String?,
             ),
           );
           if (_authService.accessToken != null) {
@@ -123,7 +130,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> register(String email, String password, String displayName) async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
-      await _authService.signUp(email: email, password: password);
+      await _authService.signUp(email: email, password: password, displayName: displayName);
       // Auth state listener will update the state
     } catch (e) {
       state = AuthState(
@@ -136,6 +143,45 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> logout() async {
     await _authService.signOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
+  }
+
+  Future<void> updateProfile({String? displayName, String? avatarUrl}) async {
+    state = state.copyWith(isProfileUpdating: true);
+    try {
+      final response = await _authService.updateProfile(
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+      );
+      
+      final user = response.user;
+      if (user != null) {
+        state = state.copyWith(
+          user: UserModel(
+            id: user.id,
+            email: user.email ?? '',
+            displayName: user.userMetadata?['display_name'] as String?,
+            avatarUrl: user.userMetadata?['avatar_url'] as String?,
+          ),
+          isProfileUpdating: false,
+        );
+      }
+    } catch (e) {
+      state = state.copyWith(isProfileUpdating: false);
+      print('Error updating profile: $e');
+    }
+  }
+
+  Future<void> uploadAndSaveAvatar(File imageFile) async {
+    state = state.copyWith(isProfileUpdating: true);
+    try {
+      final avatarUrl = await _authService.uploadAvatar(imageFile);
+      await updateProfile(avatarUrl: avatarUrl);
+    } catch (e) {
+      state = state.copyWith(
+        isProfileUpdating: false,
+        errorMessage: 'Failed to upload image: ${e.toString()}',
+      );
+    }
   }
 }
 

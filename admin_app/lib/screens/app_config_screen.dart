@@ -18,13 +18,16 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
   
   bool _isLoading = false;
   bool _isLoadingAdmins = true;
+  bool _isLoadingStudents = true;
   bool _obscurePassword = true;
   List<Map<String, dynamic>> _admins = [];
+  List<Map<String, dynamic>> _students = [];
 
   @override
   void initState() {
     super.initState();
     _fetchAdmins();
+    _fetchStudents();
   }
 
   Future<void> _fetchAdmins() async {
@@ -44,6 +47,26 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
     } catch (e) {
       debugPrint('Error fetching admins: $e');
       if (mounted) setState(() => _isLoadingAdmins = false);
+    }
+  }
+
+  Future<void> _fetchStudents() async {
+    try {
+      final data = await _supabase
+          .from('users')
+          .select()
+          .neq('role', 'admin')
+          .order('created_at', ascending: false);
+          
+      if (mounted) {
+        setState(() {
+          _students = List<Map<String, dynamic>>.from(data);
+          _isLoadingStudents = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching students: $e');
+      if (mounted) setState(() => _isLoadingStudents = false);
     }
   }
 
@@ -73,6 +96,38 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
         _fetchAdmins();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Admin removed successfully')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _removeUser(String id, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Student?'),
+        content: Text('Are you sure you want to permanently remove $name from Campus AI?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete User', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await _supabase.from('users').delete().eq('id', id);
+        
+        _fetchStudents();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User removed successfully')));
         }
       } catch (e) {
         if (mounted) {
@@ -157,9 +212,11 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    const scaffoldBgColor = Color(0xFFF8F7F2); // Soft warm cream
-    const cardBgColor = Color(0xFFEFECE3); // Slightly darker rounded card
-    const primaryColor = Color(0xFFAFA098);
+    final cardBgColor = Theme.of(context).colorScheme.surface;
+    final primaryColor = Theme.of(context).brightness == Brightness.dark 
+        ? const Color(0xFFDCC8B6) 
+        : const Color(0xFFAFA098);
+    final scaffoldBgColor = Theme.of(context).scaffoldBackgroundColor;
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
@@ -168,14 +225,20 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 28),
+          icon: Icon(Icons.arrow_back, 
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.white 
+                : Colors.black, 
+            size: 28),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'App Config',
           style: textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
-            color: Colors.black,
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? Colors.white 
+                : Colors.black,
             fontSize: 22,
           ),
         ),
@@ -190,14 +253,18 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                 'Add New Admin',
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: Colors.black87,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white.withOpacity(0.9) 
+                      : Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Create a new administrator account with full access to Campus AI management tools.',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: Colors.black54,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white60 
+                      : Colors.black54,
                   height: 1.5,
                 ),
               ),
@@ -229,7 +296,9 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                           labelText: 'Display Name',
                           prefixIcon: const Icon(Icons.person_outline),
                           filled: true,
-                          fillColor: scaffoldBgColor,
+                          fillColor: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.05) 
+                              : Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -248,7 +317,9 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                           labelText: 'Admin Email',
                           prefixIcon: const Icon(Icons.email_outlined),
                           filled: true,
-                          fillColor: scaffoldBgColor,
+                          fillColor: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.05) 
+                              : Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -274,7 +345,9 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                           filled: true,
-                          fillColor: scaffoldBgColor,
+                          fillColor: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.05) 
+                              : Colors.white,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -326,7 +399,9 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                 'Existing Administrators',
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: Colors.black87,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white.withOpacity(0.9) 
+                      : Colors.black87,
                 ),
               ),
               const SizedBox(height: 16),
@@ -340,7 +415,7 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBgColor,
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: Colors.grey.withOpacity(0.2)),
                   ),
@@ -359,8 +434,13 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBgColor,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.05) 
+                              : Colors.transparent,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.02),
@@ -395,6 +475,9 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                                         admin['display_name'] ?? 'Unknown',
                                         style: textTheme.titleMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? Colors.white 
+                                              : Colors.black,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -414,7 +497,11 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                                 ),
                                 Text(
                                   admin['email'] ?? '',
-                                  style: textTheme.bodySmall?.copyWith(color: Colors.black54),
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white60 
+                                        : Colors.black54,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -433,6 +520,129 @@ class _AppConfigScreenState extends State<AppConfigScreen> {
                   },
                 ),
                 
+              const SizedBox(height: 48),
+              
+              Text(
+                'Student Directory',
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white.withOpacity(0.9) 
+                      : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'View and manage all students currently signed up for the app.',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white60 
+                      : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              if (_isLoadingStudents)
+                const Center(child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(),
+                ))
+              else if (_students.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: cardBgColor,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                  ),
+                  child: const Center(child: Text('No students found.')),
+                )
+              else
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _students.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final student = _students[index];
+                    
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: cardBgColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.05) 
+                              : Colors.transparent,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            backgroundImage: student['avatar_url'] != null 
+                                ? NetworkImage(student['avatar_url']) 
+                                : null,
+                            child: student['avatar_url'] == null 
+                                ? Text(
+                                    (student['display_name'] ?? student['email'] ?? '?')[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  student['display_name'] ?? 'New Student',
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white 
+                                        : Colors.black,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  student['email'] ?? '',
+                                  style: textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white60 
+                                        : Colors.black54,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+                            tooltip: 'Remove Student',
+                            onPressed: () => _removeUser(student['id'], student['display_name'] ?? student['email'] ?? 'Unknown'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+
               if (isKeyboardOpen) const SizedBox(height: 100), // padding for scrolling
             ],
           ),

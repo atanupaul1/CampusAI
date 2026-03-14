@@ -26,26 +26,68 @@ class AdminApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(adminAuthProvider);
 
+    final baseTheme = GoogleFonts.outfitTextTheme();
+
     return MaterialApp(
       title: 'Campus ADMIN',
       debugShowCheckedModeBanner: false,
+      themeMode: ThemeMode.system, // Automatically follow user settings
+      
+      // Light Theme
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF1565C0),
         brightness: Brightness.light,
-        textTheme: GoogleFonts.outfitTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFFF8F7F2), // Premium Cream
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFAFA098),
+          brightness: Brightness.light,
+          surface: const Color(0xFFEFECE3), // Card beige
+        ),
+        textTheme: baseTheme,
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            minimumSize: const Size(64, 50), // Fix: Don't force infinity width globally
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1D1D1D),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+        ),
+      ),
+
+      // Dark Theme (Premium Vibe)
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF121212), // Deep Obsidian
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFAFA098),
+          brightness: Brightness.dark,
+          surface: const Color(0xFF1E1E1E), // Dark card
+          onSurface: const Color(0xFFE0E0E0),
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF252525),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEFECE3),
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           ),
         ),
       ),

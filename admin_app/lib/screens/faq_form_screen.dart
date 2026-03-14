@@ -70,20 +70,21 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final inputDecoration = InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFEBE6DC),
+      fillColor: isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFEBE6DC),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.all(20),
-      labelStyle: const TextStyle(color: Colors.black54),
+      labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
       floatingLabelBehavior: FloatingLabelBehavior.never,
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3EFE6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -92,7 +93,9 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 28),
+                    icon: Icon(Icons.arrow_back, 
+                      color: isDark ? Colors.white : Colors.black87, 
+                      size: 28),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -105,7 +108,7 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 36,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -142,8 +145,8 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
                         height: 56,
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E2E2E),
-                            foregroundColor: Colors.white,
+                            backgroundColor: isDark ? const Color(0xFFEBE6DC) : const Color(0xFF2E2E2E),
+                            foregroundColor: isDark ? Colors.black : Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -162,10 +165,10 @@ class _FAQFormScreenState extends State<FAQFormScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text(
+                      Text(
                         'Note: The AI Assistant uses these FAQs to answer students instantly.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                        style: TextStyle(fontSize: 12, color: isDark ? Colors.white70 : Colors.black54),
                       ),
                       const SizedBox(height: 32),
                     ],

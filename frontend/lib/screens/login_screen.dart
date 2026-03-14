@@ -1,8 +1,3 @@
-/// Campus AI Assistant — Login Screen
-///
-/// Email/password login form with a university logo placeholder
-/// and options to sign in or sign up. Uses Riverpod for state.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -51,63 +46,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
             child: Form(
               key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // University Logo Placeholder
-                  Image.asset(
-                    'assets/logo/campus_ai.png',
-                    height: 100,
+                  // Logo
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: isDark ? colorScheme.surfaceContainer : Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                          blurRadius: 20,
+                        ),
+                      ],
+                    ),
+                    child: Image.asset(
+                      'assets/logo/campus_ai.png',
+                      height: 80,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
                   // App Name
                   Text(
                     'Campus AI',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
+                    style: textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
-                    'Your smart campus companion',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                    'Your Smart Academic Assistant',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 48),
 
                   // Display Name (sign-up only)
                   if (_isSignUp) ...[
-                    TextFormField(
+                    _buildTextField(
                       controller: _nameCtrl,
+                      label: 'Display Name',
+                      icon: Icons.person_outline_rounded,
                       textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(
-                        labelText: 'Display Name',
-                        prefixIcon: Icon(Icons.person_outline_rounded),
-                      ),
+                      colorScheme: colorScheme,
                     ),
                     const SizedBox(height: 16),
                   ],
 
                   // Email
-                  TextFormField(
+                  _buildTextField(
                     controller: _emailCtrl,
+                    label: 'Email',
+                    icon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
+                    colorScheme: colorScheme,
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Enter your email';
                       if (!v.contains('@')) return 'Enter a valid email';
@@ -117,20 +130,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 16),
 
                   // Password
-                  TextFormField(
+                  _buildTextField(
                     controller: _passwordCtrl,
+                    label: 'Password',
+                    icon: Icons.lock_outline_rounded,
                     obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
+                    colorScheme: colorScheme,
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined),
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                      color: colorScheme.onSurfaceVariant,
                     ),
                     validator: (v) {
                       if (v == null || v.isEmpty) return 'Enter your password';
@@ -147,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
                         authState.errorMessage!,
-                        style: TextStyle(color: colorScheme.error, fontSize: 13),
+                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -155,35 +168,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   // Submit Button
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
-                    child: FilledButton(
+                    height: 60,
+                    child: ElevatedButton(
                       onPressed: authState.status == AuthStatus.loading
                           ? null
                           : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFD5D11),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        elevation: 5,
+                        shadowColor: const Color(0xFFFD5D11).withOpacity(0.4),
+                      ),
                       child: authState.status == AuthStatus.loading
                           ? const SizedBox(
-                              width: 22,
-                              height: 22,
+                              width: 24,
+                              height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
                               ),
                             )
-                          : Text(_isSignUp ? 'Create Account' : 'Sign In'),
+                          : Text(
+                              _isSignUp ? 'Create Account' : 'Sign In',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // Toggle Sign In / Sign Up
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _isSignUp = !_isSignUp);
-                    },
-                    child: Text(
-                      _isSignUp
-                          ? 'Already have an account? Sign In'
-                          : "Don't have an account? Sign Up",
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _isSignUp ? 'Already have an account?' : "Don't have an account?",
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _isSignUp = !_isSignUp);
+                        },
+                        child: Text(
+                          _isSignUp ? 'Sign In' : 'Sign Up',
+                          style: const TextStyle(
+                            color: Color(0xFFFD5D11),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -191,6 +225,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required ColorScheme colorScheme,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      textCapitalization: textCapitalization,
+      style: TextStyle(color: colorScheme.onSurface),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+        prefixIcon: Icon(icon, color: colorScheme.onSurfaceVariant.withOpacity(0.5)),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: colorScheme.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: colorScheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(color: Color(0xFFFD5D11)),
+        ),
+      ),
+      validator: validator,
     );
   }
 }

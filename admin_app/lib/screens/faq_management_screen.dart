@@ -37,29 +37,33 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFFFBF9F4),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Delete FAQ?',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF1D1D1D),
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : const Color(0xFF1D1D1D),
                   letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'This action cannot be undone.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
-                  color: Color(0xFF5A5A5A),
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white70 
+                      : const Color(0xFF5A5A5A),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -69,11 +73,13 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
                   Expanded(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Color(0xFF1D1D1D),
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white70 
+                              : const Color(0xFF1D1D1D),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -118,24 +124,26 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    const scaffoldBgColor = Color(0xFFF8F7F2); // Soft warm cream
-    const cardBgColor = Color(0xFFEFECE3); // Slightly darker rounded card
+    final cardBgColor = Theme.of(context).colorScheme.surface;
 
     return Scaffold(
-      backgroundColor: scaffoldBgColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             // Custom App Bar Header (Centered)
             Padding(
-              padding: const EdgeInsets.only(top: 20.0, bottom: 12.0),
-              child: Center(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 16.0, left: 24.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
                 child: Text(
                   'Manage FAQs',
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                    fontSize: 22,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black,
+                    fontSize: 24,
                   ),
                 ),
               ),
@@ -157,6 +165,11 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
                               decoration: BoxDecoration(
                                 color: cardBgColor,
                                 borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white.withOpacity(0.05) 
+                                      : Colors.transparent,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.04),
@@ -191,7 +204,9 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: textTheme.titleMedium?.copyWith(
                                                   fontWeight: FontWeight.w800,
-                                                  color: Colors.black87,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white 
+                                                      : Colors.black87,
                                                 ),
                                               ),
                                               const SizedBox(height: 8),
@@ -200,7 +215,9 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
                                                 maxLines: 2,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: textTheme.bodyMedium?.copyWith(
-                                                  color: Colors.black54,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white60 
+                                                      : Colors.black54,
                                                   height: 1.4,
                                                 ),
                                               ),
@@ -232,12 +249,22 @@ class _FAQManagementScreenState extends State<FAQManagementScreen> {
           );
           if (result == true) _fetchFAQs();
         },
-        backgroundColor: const Color(0xFFEAE5D9),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark 
+            ? const Color(0xFF4A3F35) 
+            : const Color(0xFFEAE5D9),
         elevation: 4,
-        highlightElevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        label: const Text('Add FAQ', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.add, color: Colors.black),
+        highlightElevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        label: Text('Add FAQ', 
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? const Color(0xFFDCC8B6) 
+                : Colors.black, 
+            fontWeight: FontWeight.bold)),
+        icon: Icon(Icons.add, 
+          color: Theme.of(context).brightness == Brightness.dark 
+                ? const Color(0xFFDCC8B6) 
+                : Colors.black),
       ),
     );
   }

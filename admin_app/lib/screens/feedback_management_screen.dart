@@ -68,11 +68,10 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    const scaffoldBgColor = Color(0xFFF8F7F2); // Soft warm cream
-    const cardBgColor = Color(0xFFEFECE3); // Slightly darker rounded card
+    final cardBgColor = Theme.of(context).colorScheme.surface;
 
     return Scaffold(
-      backgroundColor: scaffoldBgColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -83,20 +82,29 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                 alignment: Alignment.center,
                 children: [
                   Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      'User Feedback',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                        fontSize: 22,
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8.0, top: 12.0),
+                      child: Text(
+                        'User Feedback',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white 
+                              : Colors.black,
+                          fontSize: 24,
+                        ),
                       ),
                     ),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.black, size: 28),
+                      icon: Icon(Icons.refresh, 
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white 
+                            : Colors.black, 
+                        size: 28),
                       onPressed: _fetchFeedback,
                     ),
                   ),
@@ -184,6 +192,11 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                     decoration: BoxDecoration(
                                       color: cardBgColor,
                                       borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: Theme.of(context).brightness == Brightness.dark 
+                                            ? Colors.white.withOpacity(0.05) 
+                                            : Colors.transparent,
+                                      ),
                                     boxShadow: [
                                       BoxShadow(
                                         color: Colors.black.withOpacity(0.04),
@@ -212,13 +225,17 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                                   userName,
                                                   style: textTheme.titleMedium?.copyWith(
                                                     fontWeight: FontWeight.w800,
-                                                    color: Colors.black,
+                                                    color: Theme.of(context).brightness == Brightness.dark 
+                                                        ? Colors.white 
+                                                        : Colors.black,
                                                   ),
                                                 ),
                                                 Text(
                                                   dateStr,
                                                   style: textTheme.bodyMedium?.copyWith(
-                                                    color: Colors.black87,
+                                                    color: Theme.of(context).brightness == Brightness.dark 
+                                                        ? Colors.white70 
+                                                        : Colors.black87,
                                                   ),
                                                 ),
                                               ],
@@ -227,13 +244,17 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                             decoration: BoxDecoration(
-                                              color: isResolved ? const Color(0xFFE2EDD9) : const Color(0xFFEDDBCE),
+                                              color: isResolved 
+                                                  ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2D3B24) : const Color(0xFFE2EDD9))
+                                                  : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF3B2A1F) : const Color(0xFFEDDBCE)),
                                               borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Text(
                                               isResolved ? 'Resolved' : 'Pending',
                                               style: TextStyle(
-                                                color: isResolved ? const Color(0xFF5A7C46) : const Color(0xFF9E6B4A),
+                                              color: isResolved 
+                                                  ? (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFA8C895) : const Color(0xFF5A7C46))
+                                                  : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFDCC8B6) : const Color(0xFF9E6B4A)),
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
                                               ),
@@ -247,7 +268,9 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                       Row(
                                         children: List.generate(5, (i) => Icon(
                                           i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                                          color: Colors.black87,
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? Colors.white.withOpacity(0.9) 
+                                              : Colors.black87,
                                           size: 24,
                                         )),
                                       ),
@@ -257,7 +280,9 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                       Text(
                                         fb['content'] ?? '',
                                         style: textTheme.bodyLarge?.copyWith(
-                                          color: Colors.black87,
+                                          color: Theme.of(context).brightness == Brightness.dark 
+                                              ? Colors.white.withOpacity(0.9) 
+                                              : Colors.black87,
                                         ),
                                       ),
                                       
@@ -270,8 +295,14 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                             child: OutlinedButton(
                                               onPressed: () {}, // Future: contact logic
                                               style: OutlinedButton.styleFrom(
-                                                foregroundColor: Colors.black,
-                                                side: const BorderSide(color: Colors.black, width: 1.5),
+                                                foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                                                    ? Colors.white.withOpacity(0.9) 
+                                                    : Colors.black,
+                                                side: BorderSide(
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white24 
+                                                      : Colors.black12, 
+                                                  width: 1.5),
                                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                               ),
@@ -285,14 +316,22 @@ class _FeedbackManagementScreenState extends State<FeedbackManagementScreen> {
                                               icon: Icon(
                                                 isResolved ? Icons.undo : Icons.check, 
                                                 size: 20,
-                                                color: Colors.black,
+                                                color: Theme.of(context).brightness == Brightness.dark 
+                                                    ? Colors.black 
+                                                    : Colors.black,
                                               ),
                                               label: Text(
                                                 isResolved ? 'Mark Pending' : 'Mark Resolved',
-                                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold, 
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.black 
+                                                      : Colors.black),
                                               ),
                                               style: FilledButton.styleFrom(
-                                                backgroundColor: const Color(0xFFE1DCCF),
+                                                backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                                                    ? const Color(0xFFDCC8B6) 
+                                                    : const Color(0xFFE1DCCF),
                                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                               ),

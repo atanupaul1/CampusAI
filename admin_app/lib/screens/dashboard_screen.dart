@@ -27,7 +27,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -38,7 +38,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.02),
@@ -78,8 +78,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (context) => Container(
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF8F7F2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: BorderRadius.only(
                             topLeft: Radius.circular(32),
                             topRight: Radius.circular(32),
@@ -94,7 +94,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               width: 48,
                               height: 6,
                               decoration: BoxDecoration(
-                                color: Colors.black12,
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                    ? Colors.white24 
+                                    : Colors.black12,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                             ),
@@ -103,7 +105,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               'Administrator Profile',
                               style: textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w800,
-                                color: Colors.black87,
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                    ? Colors.white 
+                                    : Colors.black87,
                               ),
                             ),
                             const SizedBox(height: 32),
@@ -150,8 +154,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               width: double.infinity,
                               child: FilledButton.icon(
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFFE5E5),
-                                  foregroundColor: Colors.redAccent,
+                                  backgroundColor: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.red.withOpacity(0.15) 
+                                      : const Color(0xFFFFE5E5),
+                                  foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.redAccent.shade100 
+                                      : Colors.redAccent,
                                   elevation: 0,
                                   padding: const EdgeInsets.symmetric(vertical: 16),
                                   shape: RoundedRectangleBorder(
@@ -204,7 +212,9 @@ class _HomeView extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? const Color(0xFF1E1E1E) 
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
@@ -224,7 +234,9 @@ class _HomeView extends ConsumerWidget {
                         Text(
                           'Welcome back,\n${user?.displayName ?? 'Administrator'}',
                           style: textTheme.headlineSmall?.copyWith(
-                            color: Colors.black,
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.white 
+                                : Colors.black,
                             fontWeight: FontWeight.w800,
                             height: 1.2,
                           ),
@@ -233,7 +245,9 @@ class _HomeView extends ConsumerWidget {
                         Text(
                           'System Active: Ver 1.0.0',
                           style: textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[700],
+                            color: Theme.of(context).brightness == Brightness.dark 
+                                ? Colors.white60 
+                                : Colors.grey[700],
                           ),
                         ),
                       ],
@@ -244,9 +258,11 @@ class _HomeView extends ConsumerWidget {
                   Container(
                     width: 72,
                     height: 80,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF2F2F2),
-                      borderRadius: BorderRadius.only(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark 
+                          ? Colors.white.withOpacity(0.05) 
+                          : const Color(0xFFF2F2F2),
+                      borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(32),
                         topRight: Radius.circular(32),
                         bottomLeft: Radius.circular(32),
@@ -257,8 +273,10 @@ class _HomeView extends ConsumerWidget {
                       child: Container(
                         width: 48,
                         height: 48,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFE0E0E0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white.withOpacity(0.1) 
+                              : const Color(0xFFE0E0E0),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -279,7 +297,9 @@ class _HomeView extends ConsumerWidget {
               'Management Tools',
               style: textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: Colors.black,
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white 
+                    : Colors.black,
               ),
             ),
             const SizedBox(height: 20),
@@ -370,7 +390,7 @@ class _AdminCard extends StatelessWidget {
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -403,14 +423,18 @@ class _AdminCard extends StatelessWidget {
                       title,
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: Colors.black,
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white 
+                            : Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
                       style: textTheme.bodySmall?.copyWith(
-                        color: Colors.black87,
+                        color: Theme.of(context).brightness == Brightness.dark 
+                            ? Colors.white70 
+                            : Colors.black87,
                         fontSize: 13,
                       ),
                     ),
@@ -473,7 +497,7 @@ class _ProfileOptionTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFEFECE3),
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -481,19 +505,27 @@ class _ProfileOptionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white.withOpacity(0.05) 
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: Colors.black87, size: 24),
+              child: Icon(icon, 
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? Colors.white 
+                    : Colors.black87, 
+                size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: Colors.black87,
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : Colors.black87,
                 ),
               ),
             ),

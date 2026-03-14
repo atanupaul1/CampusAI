@@ -1,13 +1,5 @@
-/// Campus AI Assistant — Chat Screen
-///
-/// Full chat interface with message list, text input bar, send
-/// button, voice input button, and a typing indicator when the
-/// AI is generating a response.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import '../models/message_model.dart';
 import '../providers/chat_provider.dart';
 import '../services/tts_service.dart';
 import '../widgets/message_bubble.dart';
@@ -24,13 +16,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final _tts = TtsService();
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  bool _isListening = false;
 
   @override
   void initState() {
     super.initState();
-    // Create a session if none exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final chatState = ref.read(chatProvider);
       if (chatState.activeSession == null) {
@@ -54,7 +43,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref.read(chatProvider.notifier).sendMessage(text);
     _messageCtrl.clear();
 
-    // Scroll to bottom
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollCtrl.hasClients) {
         _scrollCtrl.animateTo(
@@ -66,53 +54,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await _speech.stop();
-      setState(() => _isListening = false);
-      return;
-    }
-
-    final available = await _speech.initialize();
-    if (!available) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Speech recognition not available')),
-        );
-      }
-      return;
-    }
-
-    setState(() => _isListening = true);
-    await _speech.listen(
-      onResult: (result) {
-        _messageCtrl.text = result.recognizedWords;
-        if (result.finalResult) {
-          setState(() => _isListening = false);
-        }
-      },
-      listenFor: const Duration(seconds: 30),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
-          chatState.activeSession?.title ?? 'Chat',
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          'New Chat',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.w900,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_comment_rounded),
-            tooltip: 'New Chat',
-            onPressed: () {
-              ref.read(chatProvider.notifier).createSession(title: 'New Chat');
-            },
+            icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onSurface),
+            onPressed: () {},
           ),
         ],
       ),
@@ -120,156 +85,76 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Messages List
           Expanded(
-            child: chatState.messages.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          size: 64,
-                          color: colorScheme.primary.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Start a conversation!',
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Ask about events, schedules, or campus info',
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.7),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollCtrl,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    itemCount: chatState.messages.length +
-                        (chatState.isSending ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == chatState.messages.length &&
-                          chatState.isSending) {
-                        return const TypingIndicator();
-                      }
-                      final msg = chatState.messages[index];
-                      return MessageBubble(
-                        message: msg,
-                        onSpeak: msg.role.name == 'assistant'
-                            ? () => _tts.speak(msg.content)
-                            : null,
-                      );
-                    },
-                  ),
-          ),
-
-          // Error banner
-          if (chatState.error != null)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              color: colorScheme.errorContainer,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      chatState.error!,
-                      style: TextStyle(color: colorScheme.onErrorContainer, fontSize: 13),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      final lastMsg = chatState.messages.lastOrNull;
-                      if (lastMsg != null && lastMsg.role == MessageRole.user) {
-                        ref.read(chatProvider.notifier).sendMessage(lastMsg.content);
-                      }
-                    },
-                    child: Text('Retry', style: TextStyle(color: colorScheme.error)),
-                  ),
-                ],
-              ),
+            child: ListView.builder(
+              controller: _scrollCtrl,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              itemCount: chatState.messages.length + (chatState.isSending ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == chatState.messages.length && chatState.isSending) {
+                  return const TypingIndicator();
+                }
+                final msg = chatState.messages[index];
+                return MessageBubble(
+                  message: msg,
+                  onSpeak: msg.role.name == 'assistant' ? () => _tts.speak(msg.content) : null,
+                );
+              },
             ),
+          ),
 
           // Input Bar
           Container(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
             decoration: BoxDecoration(
-              color: colorScheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, -2),
-                ),
-              ],
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
             ),
             child: SafeArea(
-              top: false,
               child: Row(
                 children: [
-                  // Mic button
-                  IconButton(
-                    icon: Icon(
-                      _isListening ? Icons.mic : Icons.mic_none_rounded,
-                      color: _isListening
-                          ? colorScheme.error
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: _toggleListening,
-                    tooltip: _isListening ? 'Stop listening' : 'Voice input',
-                  ),
-
-                  // Text field
+                  // Capsule Input
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(24),
+                        color: Theme.of(context).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                       ),
-                      child: TextField(
-                        controller: _messageCtrl,
-                        textCapitalization: TextCapitalization.sentences,
-                        maxLines: 4,
-                        minLines: 1,
-                        decoration: InputDecoration(
-                          hintText: _isListening
-                              ? 'Listening...'
-                              : 'Type a message...',
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 12,
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle, color: Color(0xFFFD5D11), size: 28),
+                            onPressed: () {},
                           ),
-                        ),
-                        onSubmitted: (_) => _sendMessage(),
+                          Expanded(
+                            child: TextField(
+                              controller: _messageCtrl,
+                              decoration: const InputDecoration(
+                                hintText: 'Ask anything...',
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                                fillColor: Colors.transparent,
+                              ),
+                              onSubmitted: (_) => _sendMessage(),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 6),
-
-                  // Send button
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.send_rounded,
-                        color: colorScheme.onPrimary,
-                        size: 22,
+                  const SizedBox(width: 12),
+                  // Orange Send
+                  GestureDetector(
+                    onTap: _sendMessage,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFD5D11),
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: chatState.isSending ? null : _sendMessage,
-                      tooltip: 'Send',
+                      child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 28),
                     ),
                   ),
                 ],

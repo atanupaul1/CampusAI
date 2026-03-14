@@ -1,8 +1,3 @@
-/// Campus AI Assistant — Event Card Widget
-///
-/// Displays a single campus event in a card format with
-/// title, date, location, and category chip.
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/event_model.dart';
@@ -19,89 +14,110 @@ class EventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Title
-              Text(
-                event.title,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-
-              // Date & Time
-              if (event.startTime != null)
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today_rounded,
-                        size: 16, color: colorScheme.primary),
-                    const SizedBox(width: 6),
-                    Text(
-                      DateFormat('MMM dd, yyyy • hh:mm a')
-                          .format(event.startTime!),
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-
-              // Location
-              if (event.location != null) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.location_on_rounded,
-                        size: 16, color: colorScheme.primary),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        event.location!,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+        borderRadius: BorderRadius.circular(32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Category and Attendees
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF0E8),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        child: Text(
+                          event.category ?? 'General',
+                          style: const TextStyle(
+                            color: Color(0xFFFD5D11),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-
-              // Category chip
-              if (event.category != null) ...[
-                const SizedBox(height: 10),
-                Chip(
-                  label: Text(
-                    event.category!,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSecondaryContainer,
-                    ),
+                    ],
                   ),
-                  backgroundColor: colorScheme.secondaryContainer,
-                  side: BorderSide.none,
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
-            ],
-          ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Title
+                  Text(
+                    event.title,
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 22,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Location
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_rounded, size: 18, color: Colors.blueGrey.shade700),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          event.location ?? 'Campus',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Date & Time
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded, size: 18, color: Colors.blueGrey.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        event.startTime != null 
+                          ? DateFormat('EEE, MMM d • h:mm a').format(event.startTime!)
+                          : 'TBD',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

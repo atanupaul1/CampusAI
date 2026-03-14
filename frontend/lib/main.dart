@@ -43,56 +43,71 @@ class CampusAIApp extends ConsumerWidget {
       // -------------------- Theme --------------------
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF1565C0), // University blue
         brightness: Brightness.light,
-        textTheme: GoogleFonts.interTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFFFDFCF9), // Premium Cream/Off-white
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFF05A22), // Vibrant Orange
+          primary: const Color(0xFFF05A22),
+          onPrimary: Colors.white,
+          surface: Colors.white,
+          onSurface: const Color(0xFF1D1B1E),
+          surfaceContainerLowest: Colors.white,
+          surfaceContainerLow: const Color(0xFFF8F7F2),
+          surfaceContainer: const Color(0xFFF2F1EC),
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+            backgroundColor: const Color(0xFFF05A22),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
       ),
 
       darkTheme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF1565C0),
         brightness: Brightness.dark,
-        textTheme: GoogleFonts.interTextTheme(
-          ThemeData(brightness: Brightness.dark).textTheme,
+        scaffoldBackgroundColor: const Color(0xFF121212), // Deep Obsidian
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFF05A22),
+          brightness: Brightness.dark,
+          surface: const Color(0xFF1E1E1E),
+          onSurface: const Color(0xFFE0E0E0),
+          surfaceContainerLowest: const Color(0xFF121212),
+          surfaceContainerLow: const Color(0xFF1A1A1A),
+          surfaceContainer: const Color(0xFF242424),
         ),
+        textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
+          fillColor: const Color(0xFF252525),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: const Color(0xFF1E1E1E),
+          indicatorColor: const Color(0xFFF05A22).withOpacity(0.2),
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: FilledButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+            backgroundColor: const Color(0xFFF05A22),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
       ),

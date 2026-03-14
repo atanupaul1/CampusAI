@@ -43,29 +43,33 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFFFBF9F4),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Delete Event?',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  color: Color(0xFF1D1D1D),
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white 
+                      : const Color(0xFF1D1D1D),
                   letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'This action cannot be undone.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
-                  color: Color(0xFF5A5A5A),
+                  color: Theme.of(context).brightness == Brightness.dark 
+                      ? Colors.white70 
+                      : const Color(0xFF5A5A5A),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -75,11 +79,13 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                   Expanded(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text(
+                      child: Text(
                         'Cancel',
                         style: TextStyle(
                           fontSize: 18,
-                          color: Color(0xFF1D1D1D),
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white70 
+                              : const Color(0xFF1D1D1D),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -124,24 +130,26 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    const scaffoldBgColor = Color(0xFFF8F7F2); // Soft warm cream
-    const cardBgColor = Color(0xFFEFECE3); // Slightly darker rounded card
+    final cardBgColor = Theme.of(context).colorScheme.surface;
 
     return Scaffold(
-      backgroundColor: scaffoldBgColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             // Custom App Bar Header (Tab Mode)
             Padding(
-              padding: const EdgeInsets.only(top: 20.0, bottom: 12.0),
-              child: Center(
+              padding: const EdgeInsets.only(top: 24.0, bottom: 16.0, left: 24.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
                 child: Text(
                   'Manage Events',
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                    fontSize: 22,
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.white 
+                        : Colors.black,
+                    fontSize: 24,
                   ),
                 ),
               ),
@@ -203,7 +211,9 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                                           width: 60,
                                           height: 70,
                                           decoration: BoxDecoration(
-                                            color: isExpired ? const Color(0xFFE1DCCF) : const Color(0xFFDCC8B6),
+                                            color: isExpired 
+                                                ? (Theme.of(context).brightness == Brightness.dark ? Colors.white12 : const Color(0xFFE1DCCF))
+                                                : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF4A3F35) : const Color(0xFFDCC8B6)),
                                             borderRadius: BorderRadius.circular(16),
                                           ),
                                           child: Column(
@@ -212,14 +222,18 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                                               Text(
                                                 event.startTime != null ? DateFormat('dd').format(event.startTime!) : '?',
                                                 style: textTheme.titleLarge?.copyWith(
-                                                  color: isExpired ? Colors.grey[600] : const Color(0xFF7A685A),
+                                                  color: isExpired 
+                                                      ? Colors.grey[500] 
+                                                      : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFDCC8B6) : const Color(0xFF7A685A)),
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
                                               Text(
                                                 event.startTime != null ? DateFormat('MMM').format(event.startTime!) : 'N/A',
                                                 style: textTheme.labelSmall?.copyWith(
-                                                  color: isExpired ? Colors.grey[500] : const Color(0xFFA28C7B),
+                                                  color: isExpired 
+                                                      ? Colors.grey[600] 
+                                                      : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFFA28C7B) : const Color(0xFFA28C7B)),
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
@@ -235,13 +249,17 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.white.withOpacity(0.5),
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white.withOpacity(0.05) 
+                                                      : const Color(0xFFF3EFE6),
                                                   borderRadius: BorderRadius.circular(8),
                                                 ),
                                                 child: Text(
                                                   event.category ?? 'General',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF9E8A7B),
+                                                  style: TextStyle(
+                                                    color: Theme.of(context).brightness == Brightness.dark 
+                                                        ? const Color(0xFFDCC8B6) 
+                                                        : const Color(0xFF9E8A7B),
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.bold,
                                                   ),
@@ -252,7 +270,9 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                                                 event.title,
                                                 style: textTheme.titleMedium?.copyWith(
                                                   fontWeight: FontWeight.w800,
-                                                  color: Colors.black87,
+                                                  color: Theme.of(context).brightness == Brightness.dark 
+                                                      ? Colors.white.withOpacity(0.9) 
+                                                      : Colors.black87,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -260,12 +280,20 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
                                               const SizedBox(height: 4),
                                               Row(
                                                 children: [
-                                                  const Icon(Icons.location_on_outlined, size: 14, color: Colors.black54),
+                                                  Icon(Icons.location_on_outlined, 
+                                                    size: 14, 
+                                                    color: Theme.of(context).brightness == Brightness.dark 
+                                                        ? Colors.white60 
+                                                        : Colors.black54),
                                                   const SizedBox(width: 4),
                                                   Expanded(
                                                     child: Text(
                                                       event.location ?? 'Campus',
-                                                      style: textTheme.bodySmall?.copyWith(color: Colors.black54),
+                                                      style: textTheme.bodySmall?.copyWith(
+                                                        color: Theme.of(context).brightness == Brightness.dark 
+                                                            ? Colors.white60 
+                                                            : Colors.black54,
+                                                      ),
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
@@ -300,12 +328,22 @@ class _EventManagementScreenState extends State<EventManagementScreen> {
           );
           if (result == true) _fetchEvents();
         },
-        backgroundColor: const Color(0xFFEAE5D9),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark 
+            ? const Color(0xFF4A3F35) // Darker variant
+            : const Color(0xFFEAE5D9),
         elevation: 4,
-        highlightElevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        label: const Text('Add Event', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.add, color: Colors.black),
+        highlightElevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        label: Text('Add Event', 
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark 
+                ? const Color(0xFFDCC8B6) 
+                : Colors.black, 
+            fontWeight: FontWeight.bold)),
+        icon: Icon(Icons.add, 
+          color: Theme.of(context).brightness == Brightness.dark 
+                ? const Color(0xFFDCC8B6) 
+                : Colors.black),
       ),
     );
   }

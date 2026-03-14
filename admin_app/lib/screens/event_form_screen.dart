@@ -25,7 +25,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
   bool _isSaving = false;
 
-  final List<String> _categories = ['Academic', 'Workshop', 'Cultural', 'Sports', 'Other'];
+  final List<String> _categories = ['Academic', 'Workshop', 'Sports', 'Music', 'Tech', 'Exam', 'Other'];
 
   @override
   void initState() {
@@ -99,20 +99,21 @@ class _EventFormScreenState extends State<EventFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final inputDecoration = InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFEBE6DC),
+      fillColor: isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFEBE6DC),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
       contentPadding: const EdgeInsets.all(20),
-      labelStyle: const TextStyle(color: Colors.black54),
+      labelStyle: TextStyle(color: isDark ? Colors.white60 : Colors.black54),
       floatingLabelBehavior: FloatingLabelBehavior.never,
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF3EFE6),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -121,7 +122,9 @@ class _EventFormScreenState extends State<EventFormScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 28),
+                    icon: Icon(Icons.arrow_back, 
+                      color: isDark ? Colors.white : Colors.black87, 
+                      size: 28),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -134,7 +137,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 36,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: isDark ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -171,19 +174,24 @@ class _EventFormScreenState extends State<EventFormScreen> {
                       const SizedBox(height: 16),
                       Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEBE6DC),
+                          color: isDark ? Colors.white.withOpacity(0.05) : const Color(0xFFEBE6DC),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          title: const Text('Event Date & Time', style: TextStyle(color: Colors.black54, fontSize: 13)),
+                          title: Text('Event Date & Time', 
+                            style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 13)),
                           subtitle: Text(
                             _startTime == null
                                 ? 'Not selected'
                                 : DateFormat('MMM dd, yyyy • hh:mm a').format(_startTime!),
-                            style: const TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87, 
+                              fontSize: 16, 
+                              fontWeight: FontWeight.w500),
                           ),
-                          trailing: const Icon(Icons.calendar_today_rounded, color: Colors.black54),
+                          trailing: Icon(Icons.calendar_today_rounded, 
+                            color: isDark ? Colors.white60 : Colors.black54),
                           onTap: _selectDateTime,
                         ),
                       ),
@@ -193,8 +201,8 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         height: 56,
                         child: FilledButton(
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E2E2E),
-                            foregroundColor: Colors.white,
+                            backgroundColor: isDark ? const Color(0xFFEBE6DC) : const Color(0xFF2E2E2E),
+                            foregroundColor: isDark ? Colors.black : Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
